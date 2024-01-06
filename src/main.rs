@@ -1,13 +1,16 @@
 use std::env;
 
 use axum::{routing::get, Router};
+use database::{DataLayer, Database};
 use dotenvy::dotenv;
-use sqlx::{Pool, Sqlite, SqlitePool};
+use sqlx::SqlitePool;
 use tower_http::trace::TraceLayer;
 
+mod database;
+
 #[derive(Clone)]
-struct AppState {
-    db: Pool<Sqlite>,
+struct AppState<T: DataLayer> {
+    db: T,
 }
 
 #[tokio::main]
@@ -21,7 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(root))
         .layer(TraceLayer::new_for_http())
-        .with_state(AppState { db: pool });
+        .with_state(AppState {
+            db: Database::new(pool),
+        });
 
     let port = env::var("PORT").unwrap_or("8000".to_string());
     let address = format!("0.0.0.0:{port}");
