@@ -7,6 +7,7 @@ use sqlx::SqlitePool;
 use tower_http::trace::TraceLayer;
 
 mod database;
+mod error;
 mod models;
 mod routes;
 

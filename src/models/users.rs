@@ -2,7 +2,7 @@ use sqlx::FromRow;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
-use crate::database::Database;
+use crate::{database::Database, error::ApiResult};
 
 #[derive(FromRow)]
 pub struct User {
@@ -13,13 +13,13 @@ pub struct User {
 }
 
 pub trait UserDataLayer {
-    async fn get_user<'a>(&'a self, id: &'a Uuid) -> Result<Option<User>, ApiError>;
-    async fn create_user<'a>(&'a self, name: &'a str) -> Result<Uuid, ApiError>;
-    async fn delete_user<'a>(&'a self, id: &'a Uuid) -> Result<(), ApiError>;
+    async fn get_user<'a>(&'a self, id: &'a Uuid) -> ApiResult<Option<User>>;
+    async fn create_user<'a>(&'a self, name: &'a str) -> ApiResult<Uuid>;
+    async fn delete_user<'a>(&'a self, id: &'a Uuid) -> ApiResult<()>;
 }
 
 impl UserDataLayer for Database {
-    async fn get_user<'a>(&'a self, id: &'a Uuid) -> Result<Option<User>, ApiError> {
+    async fn get_user<'a>(&'a self, id: &'a Uuid) -> ApiResult<Option<User>> {
         let user = sqlx::query_as::<_, User>(
             r#"SELECT id as "id: uuid::Uuid", name, created_at, updated_at FROM user WHERE id = ?"#,
         )
@@ -29,7 +29,7 @@ impl UserDataLayer for Database {
         Ok(user)
     }
 
-    async fn create_user<'a>(&'a self, name: &'a str) -> Result<Uuid, ApiError> {
+    async fn create_user<'a>(&'a self, name: &'a str) -> ApiResult<Uuid> {
         let id = Uuid::new_v4();
         let now = OffsetDateTime::now_utc();
         sqlx::query(r#"INSERT INTO user (id, name, created_at) VALUES ($1, $2, $3)"#)
@@ -41,21 +41,11 @@ impl UserDataLayer for Database {
         Ok(id)
     }
 
-    async fn delete_user<'a>(&'a self, id: &'a Uuid) -> Result<(), ApiError> {
+    async fn delete_user<'a>(&'a self, id: &'a Uuid) -> ApiResult<()> {
         sqlx::query(r#"DELETE FROM user WHERE id = ?"#)
             .bind(id)
             .execute(&self.db)
             .await?;
         Ok(())
-    }
-}
-
-pub enum ApiError {
-    DatabaseError(sqlx::Error),
-}
-
-impl From<sqlx::Error> for ApiError {
-    fn from(value: sqlx::Error) -> Self {
-        Self::DatabaseError(value)
     }
 }

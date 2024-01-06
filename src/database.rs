@@ -1,6 +1,8 @@
 use sqlx::{Pool, Sqlite};
 
-pub trait DataLayer: Clone {}
+use crate::models::{routines::RoutineDataLayer, users::UserDataLayer};
+
+pub trait DataLayer: Clone + UserDataLayer + RoutineDataLayer {}
 
 #[derive(Clone)]
 pub struct Database {
