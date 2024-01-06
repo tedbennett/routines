@@ -4,7 +4,7 @@ pub trait DataLayer: Clone {}
 
 #[derive(Clone)]
 pub struct Database {
-    db: Pool<Sqlite>,
+    pub db: Pool<Sqlite>,
 }
 
 impl Database {

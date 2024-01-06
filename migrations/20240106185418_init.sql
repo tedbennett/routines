@@ -2,8 +2,8 @@
 CREATE TABLE IF NOT EXISTS user(
 	id BLOB PRIMARY KEY NOT NULL,
 	name TEXT NOT NULL,
-	created_at TEXT NOT NULL,
-	updated_at TEXT
+	created_at DATETIME NOT NULL,
+	updated_at DATETIME
 );
 
 
@@ -12,11 +12,13 @@ CREATE TABLE IF NOT EXISTS routine(
 	title TEXT NOT NULL,
 	user_id BLOB NOT NULL,
 	color TEXT NOT NULL DEFAULT '#000000',
+	created_at DATETIME NOT NULL,
+	updated_at DATETIME,
 	FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS routine_entry(
-	date TEXT NOT NULL,
+	date DATE NOT NULL,
 	routine_id BLOB NOT NULL,
 	PRIMARY KEY (date, routine_id)
 	FOREIGN KEY(routine_id) REFERENCES routine(id) ON DELETE CASCADE ON UPDATE CASCADE

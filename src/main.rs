@@ -7,6 +7,8 @@ use sqlx::SqlitePool;
 use tower_http::trace::TraceLayer;
 
 mod database;
+mod models;
+mod routes;
 
 #[derive(Clone)]
 struct AppState<T: DataLayer> {
