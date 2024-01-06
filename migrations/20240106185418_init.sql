@@ -1,0 +1,24 @@
+-- Add migration script here
+CREATE TABLE IF NOT EXISTS user(
+	id BLOB PRIMARY KEY NOT NULL,
+	name TEXT NOT NULL,
+	created_at TEXT NOT NULL,
+	updated_at TEXT
+);
+
+
+CREATE TABLE IF NOT EXISTS routine(
+	id BLOB PRIMARY KEY NOT NULL,
+	title TEXT NOT NULL,
+	user_id BLOB NOT NULL,
+	color TEXT NOT NULL DEFAULT '#000000',
+	FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS routine_entry(
+	date TEXT NOT NULL,
+	routine_id BLOB NOT NULL,
+	PRIMARY KEY (date, routine_id)
+	FOREIGN KEY(routine_id) REFERENCES routine(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+

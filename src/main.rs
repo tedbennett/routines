@@ -21,6 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let pool = SqlitePool::connect(&env::var("DATABASE_URL")?).await?;
+    sqlx::migrate!().run(&pool).await?;
     let app = Router::new()
         .route("/", get(root))
         .layer(TraceLayer::new_for_http())
