@@ -1,10 +1,11 @@
+use serde::Serialize;
 use sqlx::prelude::FromRow;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{database::Database, error::ApiResult};
 
-#[derive(FromRow)]
+#[derive(FromRow, Serialize)]
 pub struct Routine {
     pub id: Uuid,
     pub title: String,

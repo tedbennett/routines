@@ -19,9 +19,9 @@ sqlx = { version = "0.7.3", features = [
 	"sqlite",
 	"runtime-tokio",
 ] }
-time = "0.3.31"
+time = { version = "0.3.31", features = ["serde"] }
 tokio = { version = "1.35.1", features = ["full"] }
 tower-http = { version = "0.5.0", features = ["trace"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-uuid = { version = "1.6.1", features = ["v4"] }
+uuid = { version = "1.6.1", features = ["serde", "v4"] }
