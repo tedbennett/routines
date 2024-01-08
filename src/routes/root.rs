@@ -1,83 +1,102 @@
-use axum::{
-    extract::State,
-    response::{Html, IntoResponse},
-};
-use maud::{html, Markup, DOCTYPE};
-use serde::Serialize;
+use axum::{extract::State, response::Html, Form};
+use serde::Deserialize;
+use time::{ext::NumericalDuration, Date, Duration, OffsetDateTime};
+
+use uuid::Uuid;
 
 use crate::{
-    database::Database,
-    models::routines::{Routine, RoutineDataLayer},
+    database::DataLayer,
+    models::entries::RoutineEntry,
+    templates::{index, routine_card, routine_entry, RoutineWithEntries},
     AppState,
 };
 
-#[derive(Serialize)]
-pub struct IndexGlobals {
-    routines: Vec<Routine>,
-}
+const NUM_ENTRIES: i64 = 60;
 
-pub async fn root(State(state): State<AppState<Database>>) -> impl IntoResponse {
+pub async fn root<T: DataLayer>(State(state): State<AppState<T>>) -> Html<String> {
     let routines = state.db.get_routines(&state.user_id).await.unwrap();
-    let markup = index(&routines);
+    let ids = routines.iter().map(|r| r.id).collect();
+    let all_entries = state.db.get_entries(&ids).await.unwrap();
+    let data: Vec<_> = routines
+        .into_iter()
+        .map(|r| {
+            let entries = build_entry_table(&r.id, &all_entries, NUM_ENTRIES);
+            RoutineWithEntries {
+                routine: r,
+                entries,
+            }
+        })
+        .collect();
+    let markup = index(&data);
     Html(markup.into_string())
 }
 
-fn index(routines: &[Routine]) -> Markup {
-    html! {
-        (header("Routines"))
-        body {
-            (navbar())
-            div .page-container {
-                div .routine-card-list {
-
-                }
-
-            }
-            (create_routine_form())
-        }
-    }
+#[derive(Deserialize)]
+pub struct CreateRoutineRequest {
+    title: String,
+    color: String,
 }
 
-fn navbar() -> Markup {
-    html! {
-        nav .navbar {
-            span .nav-title {
-                "Your Routines"
-            }
-        }
-    }
+pub async fn create_routine<T: DataLayer>(
+    State(state): State<AppState<T>>,
+    Form(body): Form<CreateRoutineRequest>,
+) -> Html<String> {
+    let routine = state
+        .db
+        .create_routine(&body.title, &body.color, &state.user_id)
+        .await
+        .unwrap();
+    let entries = build_entry_table(&routine.id, &vec![], NUM_ENTRIES);
+    let markup = routine_card(&routine, &entries);
+    Html(markup.into_string())
 }
 
-fn create_routine_form() -> Markup {
-    html! {
-        form .card hx-post="/routine" hx-target="#routine-list" hx-swap="beforeend" {
-            span .card-title {
-                "Create Routine"
-            }
-            div .form-body {
-                input .color-input type="color" name="color";
-                input .title-input type="text" name="title";
-                button type="submit" {
-                    "Create"
-                }
-            }
-        }
-    }
+#[derive(Deserialize)]
+pub struct ToggleEntryRequest {
+    date: Date,
+    routine_id: Uuid,
 }
 
-fn routine_card(routine: &Routine) -> Markup {
-    html! {
-        span { "Hi!" }
-    }
+pub async fn toggle_entry<T: DataLayer>(
+    State(state): State<AppState<T>>,
+    Form(body): Form<ToggleEntryRequest>,
+) -> Html<String> {
+    let complete = state
+        .db
+        .toggle_entries(&body.date, &body.routine_id)
+        .await
+        .unwrap();
+
+    let routine = state
+        .db
+        .get_routine(&body.routine_id)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let markup = routine_entry(&body.date, !complete, &routine.color);
+    tracing::info!("{}", markup.clone().into_string());
+    Html(markup.into_string())
 }
 
-fn header(page_title: &str) -> Markup {
-    html! {
-        (DOCTYPE)
-        meta charset="utf-8" {}
-        meta name="viewport" content="width=device-width, initial-scale=1.0" {}
-        link rel="stylesheet" href="/static/index.css" {}
-        script src="static/js/htmx@1.9.5.js" {}
-        title { (page_title) }
-    }
+fn build_entry_table(routine: &Uuid, entries: &[RoutineEntry], size: i64) -> Vec<(Date, bool)> {
+    let now = OffsetDateTime::now_utc();
+    let start = Date::from_calendar_date(now.year(), now.month(), now.day())
+        .unwrap()
+        .checked_add(-Duration::days(size))
+        .unwrap();
+
+    (0..size)
+        .into_iter()
+        .map(|i| {
+            let date = start.checked_add(i.days()).unwrap();
+            (
+                date,
+                entries
+                    .iter()
+                    .find(|e| e.routine_id == *routine && e.date == date)
+                    .is_some(),
+            )
+        })
+        .collect()
 }

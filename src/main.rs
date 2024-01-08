@@ -1,10 +1,15 @@
-use std::env;
+#![allow(async_fn_in_trait)]
 
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use database::{DataLayer, Database};
 use dotenvy::dotenv;
-use routes::root;
+use r#static::static_router;
+use routes::{create_routine, root, toggle_entry};
 use sqlx::SqlitePool;
+use std::env;
 use tower_http::trace::TraceLayer;
 use uuid::Uuid;
 
@@ -12,6 +17,7 @@ mod database;
 mod error;
 mod models;
 mod routes;
+mod r#static;
 mod templates;
 
 #[derive(Clone)]
@@ -36,6 +42,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/routine", post(create_routine))
+        .route("/entry", post(toggle_entry))
+        .route("/static/*path", get(static_router))
         .layer(TraceLayer::new_for_http())
         .with_state(state);
     let port = env::var("PORT").unwrap_or("8000".to_string());

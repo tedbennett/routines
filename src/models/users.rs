@@ -21,7 +21,7 @@ pub trait UserDataLayer {
 impl UserDataLayer for Database {
     async fn get_user<'a>(&'a self, id: &'a Uuid) -> ApiResult<Option<User>> {
         let user = sqlx::query_as::<_, User>(
-            r#"SELECT id as "id: uuid::Uuid", name, created_at, updated_at FROM user WHERE id = ?"#,
+            r#"SELECT id, name, created_at, updated_at FROM user WHERE id = ?"#,
         )
         .bind(id)
         .fetch_optional(&self.db)
