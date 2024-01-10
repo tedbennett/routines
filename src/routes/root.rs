@@ -6,15 +6,21 @@ use uuid::Uuid;
 
 use crate::{
     database::DataLayer,
-    models::entries::RoutineEntry,
+    models::{entries::RoutineEntry, users::User},
+    state::AppState,
     templates::{index, routine_card, routine_entry, RoutineWithEntries},
-    AppState,
 };
 
 const NUM_ENTRIES: i64 = 60;
 
-pub async fn root<T: DataLayer>(State(state): State<AppState<T>>) -> Html<String> {
-    let routines = state.db.get_routines(&state.user_id).await.unwrap();
+pub async fn root<T: DataLayer>(
+    State(state): State<AppState<T>>,
+    user: Option<User>,
+) -> Html<String> {
+    let Some(user) = user else {
+        return Html("Unauthorized".to_string());
+    };
+    let routines = state.db.get_routines(&user.id).await.unwrap();
     let ids = routines.iter().map(|r| r.id).collect();
     let all_entries = state.db.get_entries(&ids).await.unwrap();
     let data: Vec<_> = routines
@@ -39,11 +45,12 @@ pub struct CreateRoutineRequest {
 
 pub async fn create_routine<T: DataLayer>(
     State(state): State<AppState<T>>,
+    user: User,
     Form(body): Form<CreateRoutineRequest>,
 ) -> Html<String> {
     let routine = state
         .db
-        .create_routine(&body.title, &body.color, &state.user_id)
+        .create_routine(&body.title, &body.color, &user.id)
         .await
         .unwrap();
     let entries = build_entry_table(&routine.id, &vec![], NUM_ENTRIES);
