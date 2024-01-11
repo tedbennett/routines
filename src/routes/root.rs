@@ -1,4 +1,8 @@
-use axum::{extract::State, response::Html};
+use axum::{
+    extract::{Query, State},
+    response::Html,
+};
+use serde::Deserialize;
 use time::{ext::NumericalDuration, Date, Duration, OffsetDateTime};
 
 use uuid::Uuid;
@@ -7,17 +11,24 @@ use crate::{
     database::DataLayer,
     models::{entries::RoutineEntry, users::User},
     state::AppState,
-    templates::{index, RoutineWithEntries},
+    templates::home::index,
 };
+use crate::{models::routines::RoutineWithEntries, templates::login::login};
 
 pub const NUM_ENTRIES: i64 = 60;
 
+#[derive(Deserialize)]
+pub struct QueryParams {
+    invite: Option<String>,
+}
+
 pub async fn root<T: DataLayer>(
-    State(state): State<AppState<T>>,
     user: Option<User>,
+    State(state): State<AppState<T>>,
+    Query(query): Query<QueryParams>,
 ) -> Html<String> {
     let Some(user) = user else {
-        return Html("Unauthorized".to_string());
+        return Html(login(query.invite).into_string());
     };
     let routines = state.db.get_routines(&user.id).await.unwrap();
     let ids = routines.iter().map(|r| r.id).collect();

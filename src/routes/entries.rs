@@ -3,7 +3,7 @@ use serde::Deserialize;
 use time::Date;
 use uuid::Uuid;
 
-use crate::{database::DataLayer, state::AppState, templates::routine_entry};
+use crate::{database::DataLayer, state::AppState, templates::components::routine_entry};
 
 #[derive(Deserialize)]
 pub struct ToggleEntryRequest {

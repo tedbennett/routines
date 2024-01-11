@@ -1,34 +1,19 @@
+use crate::models::routines::Routine;
 use maud::{html, Markup, DOCTYPE};
 use time::Date;
 
-use crate::models::routines::Routine;
-
-pub struct RoutineWithEntries {
-    pub routine: Routine,
-    pub entries: Vec<(Date, bool)>,
-}
-pub fn index(routines: &[RoutineWithEntries]) -> Markup {
-    html! {
-        (header("Routines"))
-        body {
-            (navbar())
-            article .page-container {
-                div .routine-card-list #routine-list {
-                    @for routine in routines {
-                        (routine_card(&routine.routine, &routine.entries))
-                    }
-                }
-                (create_routine_form())
-            }
-        }
-    }
-}
-
-pub fn navbar() -> Markup {
+pub fn navbar(signed_in: bool) -> Markup {
     html! {
         nav .navbar {
-            span .nav-title {
-                "Your Routines"
+            .nav-contents {
+                span .nav-title {
+                    "Your Routines"
+                }
+                @if signed_in {
+                    a href="/logout" {
+                        "Logout"
+                    }
+                }
             }
         }
     }

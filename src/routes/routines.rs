@@ -1,7 +1,9 @@
 use axum::{extract::State, response::Html, Form};
 use serde::Deserialize;
 
-use crate::{database::DataLayer, models::users::User, state::AppState, templates::routine_card};
+use crate::{
+    database::DataLayer, models::users::User, state::AppState, templates::components::routine_card,
+};
 
 use super::root::{build_entry_table, NUM_ENTRIES};
 

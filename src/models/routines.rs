@@ -1,5 +1,5 @@
 use sqlx::prelude::FromRow;
-use time::OffsetDateTime;
+use time::{Date, OffsetDateTime};
 use uuid::Uuid;
 
 use crate::{database::Database, error::ApiResult};
@@ -12,6 +12,11 @@ pub struct Routine {
     pub user_id: Uuid,
     pub created_at: OffsetDateTime,
     pub updated_at: Option<OffsetDateTime>,
+}
+
+pub struct RoutineWithEntries {
+    pub routine: Routine,
+    pub entries: Vec<(Date, bool)>,
 }
 
 pub trait RoutineDataLayer {

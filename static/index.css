@@ -8,24 +8,32 @@ body {
 	background: var(--bg-color);
 	color: white;
 }
-
-.navbar {
-	position: fixed;
-	top: 0;
-	width: 100%;
-	height: 4rem;
+.nav-contents {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
+	padding: 0.7rem;
+	width: auto;
+}
+
+.navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
 	border: 1px solid var(--border-color);
 }
 
 .nav-title {
-	padding: 0.5rem;
 	font-weight: 600;
 	font-size: 1.125rem; 
 	line-height: 1.75rem; 
+}
+
+a {
+	text-decoration: none;
+	color: white;
 }
 
 .card {
@@ -96,5 +104,45 @@ body {
 .entry {
 	width: 2rem;
 	height: 2rem;
+	border-radius: 0.4rem;
+}
+
+/* Login classes  */
+.login-container {
+	text-align: center;
+	background-color: var(--border-color);
+	margin-top: 8rem;
+	border-radius: 0.4rem;
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.login-container hr {
+	background-color: var(--secondary-text);
+	width: 100%;
+	margin: 1rem 0;
+}
+
+.login-container a,h2 {
+	margin:  0.1rem 0
+}
+
+.login-title {
+	margin: 0.1rem;
+}
+
+.callout {
+	margin: 0.1rem;
+	font-size: 0.85rem; 
+	color: rgb(161 161 170);
+}
+
+.login-button {
+	padding: 1rem;
+	color: black;
+	background-color: white;
 	border-radius: 0.4rem;
 }
