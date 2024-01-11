@@ -1,5 +1,7 @@
+mod entries;
 mod root;
+mod routines;
 
-pub use root::create_routine;
+pub use entries::toggle_entry;
 pub use root::root;
-pub use root::toggle_entry;
+pub use routines::create_routine;

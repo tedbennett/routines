@@ -1,5 +1,4 @@
-use axum::{extract::State, response::Html, Form};
-use serde::Deserialize;
+use axum::{extract::State, response::Html};
 use time::{ext::NumericalDuration, Date, Duration, OffsetDateTime};
 
 use uuid::Uuid;
@@ -8,10 +7,10 @@ use crate::{
     database::DataLayer,
     models::{entries::RoutineEntry, users::User},
     state::AppState,
-    templates::{index, routine_card, routine_entry, RoutineWithEntries},
+    templates::{index, RoutineWithEntries},
 };
 
-const NUM_ENTRIES: i64 = 60;
+pub const NUM_ENTRIES: i64 = 60;
 
 pub async fn root<T: DataLayer>(
     State(state): State<AppState<T>>,
@@ -37,56 +36,7 @@ pub async fn root<T: DataLayer>(
     Html(markup.into_string())
 }
 
-#[derive(Deserialize)]
-pub struct CreateRoutineRequest {
-    title: String,
-    color: String,
-}
-
-pub async fn create_routine<T: DataLayer>(
-    State(state): State<AppState<T>>,
-    user: User,
-    Form(body): Form<CreateRoutineRequest>,
-) -> Html<String> {
-    let routine = state
-        .db
-        .create_routine(&body.title, &body.color, &user.id)
-        .await
-        .unwrap();
-    let entries = build_entry_table(&routine.id, &vec![], NUM_ENTRIES);
-    let markup = routine_card(&routine, &entries);
-    Html(markup.into_string())
-}
-
-#[derive(Deserialize)]
-pub struct ToggleEntryRequest {
-    date: Date,
-    routine_id: Uuid,
-}
-
-pub async fn toggle_entry<T: DataLayer>(
-    State(state): State<AppState<T>>,
-    Form(body): Form<ToggleEntryRequest>,
-) -> Html<String> {
-    let complete = state
-        .db
-        .toggle_entries(&body.date, &body.routine_id)
-        .await
-        .unwrap();
-
-    let routine = state
-        .db
-        .get_routine(&body.routine_id)
-        .await
-        .unwrap()
-        .unwrap();
-
-    let markup = routine_entry(&body.date, !complete, &routine.color);
-    tracing::info!("{}", markup.clone().into_string());
-    Html(markup.into_string())
-}
-
-fn build_entry_table(routine: &Uuid, entries: &[RoutineEntry], size: i64) -> Vec<(Date, bool)> {
+pub fn build_entry_table(routine: &Uuid, entries: &[RoutineEntry], size: i64) -> Vec<(Date, bool)> {
     let now = OffsetDateTime::now_utc();
     let start = Date::from_calendar_date(now.year(), now.month(), now.day())
         .unwrap()

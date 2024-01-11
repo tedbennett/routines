@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 use clap::Parser;
-use database::{DataLayer, Database};
+use database::Database;
 use dotenvy::dotenv;
 use r#static::static_router;
 use routes::{create_routine, root, toggle_entry};
@@ -14,7 +14,6 @@ use sqlx::SqlitePool;
 use state::{AppState, Env};
 use std::env;
 use tower_http::trace::TraceLayer;
-use uuid::Uuid;
 
 mod auth;
 mod database;
