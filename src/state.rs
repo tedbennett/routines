@@ -50,7 +50,7 @@ impl FromRef<AppState<Database>> for Database {
 #[derive(Parser, Clone, Debug)]
 pub struct Env {
     #[clap(long, env)]
-    pub database_url: String,
+    pub database_path: String,
 
     #[clap(long, env)]
     pub port: usize,

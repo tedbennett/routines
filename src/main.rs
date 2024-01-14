@@ -1,16 +1,16 @@
 #![allow(async_fn_in_trait)]
 
+use anyhow::Context;
 use auth::{google_auth, login_authorized, logout, protected};
 use axum::{
     routing::{get, post},
     Router,
 };
 use clap::Parser;
-use database::Database;
+use database::{setup_database, Database};
 use dotenvy::dotenv;
 use r#static::static_router;
 use routes::{create_routine, root, toggle_entry};
-use sqlx::SqlitePool;
 use state::{AppState, Env};
 use std::env;
 use tower_http::trace::TraceLayer;
@@ -32,9 +32,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let pool = SqlitePool::connect(&env::var("DATABASE_URL")?).await?;
-    sqlx::migrate!().run(&pool).await?;
-
+    let pool = setup_database(&env.database_path)
+        .await
+        .context("Failed to setup database")?;
     let oauth = auth::oauth_client(&env).expect("Failed to build oauth client");
 
     let state = AppState::new(Database::new(pool), env, oauth);
