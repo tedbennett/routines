@@ -1,39 +1,41 @@
-use async_session::MemoryStore;
 use axum::extract::FromRef;
 use clap::Parser;
 use oauth2::basic::BasicClient;
 use reqwest::Client;
 
-use crate::database::{DataLayer, Database};
+use crate::{
+    auth::DBSessionStore,
+    database::{DataLayer, Database},
+};
 
 #[derive(Clone)]
-pub struct AppState<T: DataLayer> {
+pub struct AppState<T: for<'a> DataLayer<'a>> {
     pub db: T,
-    pub session_store: MemoryStore,
+    pub session_store: DBSessionStore<T>,
     pub oauth_client: BasicClient,
     pub http_client: Client,
     pub env: Env,
 }
 
-impl<T: DataLayer> AppState<T> {
-    pub fn new(db: T, env: Env, oauth_client: BasicClient) -> Self {
+impl AppState<Database> {
+    pub fn new(db: Database, env: Env, oauth_client: BasicClient) -> Self {
         Self {
-            db,
+            db: db.clone(),
             env,
             oauth_client,
-            session_store: MemoryStore::new(),
+            session_store: DBSessionStore { db },
             http_client: Client::new(),
         }
     }
 }
 
-impl<T: DataLayer> FromRef<AppState<T>> for MemoryStore {
+impl<T: for<'a> DataLayer<'a>> FromRef<AppState<T>> for DBSessionStore<T> {
     fn from_ref(state: &AppState<T>) -> Self {
         state.session_store.clone()
     }
 }
 
-impl<T: DataLayer> FromRef<AppState<T>> for BasicClient {
+impl<T: for<'a> DataLayer<'a>> FromRef<AppState<T>> for BasicClient {
     fn from_ref(state: &AppState<T>) -> Self {
         state.oauth_client.clone()
     }

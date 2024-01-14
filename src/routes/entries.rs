@@ -11,7 +11,7 @@ pub struct ToggleEntryRequest {
     routine_id: Uuid,
 }
 
-pub async fn toggle_entry<T: DataLayer>(
+pub async fn toggle_entry<T: for<'a> DataLayer<'a>>(
     State(state): State<AppState<T>>,
     Form(body): Form<ToggleEntryRequest>,
 ) -> Html<String> {

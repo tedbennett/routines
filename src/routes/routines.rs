@@ -13,7 +13,7 @@ pub struct CreateRoutineRequest {
     color: String,
 }
 
-pub async fn create_routine<T: DataLayer>(
+pub async fn create_routine<T: for<'a> DataLayer<'a>>(
     State(state): State<AppState<T>>,
     user: User,
     Form(body): Form<CreateRoutineRequest>,

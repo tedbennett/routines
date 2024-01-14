@@ -22,7 +22,7 @@ pub struct QueryParams {
     invite: Option<String>,
 }
 
-pub async fn root<T: DataLayer>(
+pub async fn root<T: for<'a> DataLayer<'a>>(
     user: Option<User>,
     State(state): State<AppState<T>>,
     Query(query): Query<QueryParams>,

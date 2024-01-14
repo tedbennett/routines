@@ -1,12 +1,26 @@
+use std::fmt::Debug;
+
 use sqlx::{Pool, Sqlite};
 
 use crate::models::{
-    entries::RoutineEntryDataLayer, routines::RoutineDataLayer, users::UserDataLayer,
+    entries::RoutineEntryDataLayer, routines::RoutineDataLayer, sessions::SessionDataLayer,
+    users::UserDataLayer,
 };
 
-pub trait DataLayer: Clone + UserDataLayer + RoutineDataLayer + RoutineEntryDataLayer {}
+pub trait DataLayer<'a>:
+    Clone
+    + Debug
+    + std::marker::Send
+    + std::marker::Sync
+    + UserDataLayer
+    + RoutineDataLayer
+    + SessionDataLayer
+    + RoutineEntryDataLayer
+    + 'a
+{
+}
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Database {
     pub db: Pool<Sqlite>,
 }
@@ -17,4 +31,4 @@ impl Database {
     }
 }
 
-impl DataLayer for Database {}
+impl DataLayer<'_> for Database {}

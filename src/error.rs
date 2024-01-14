@@ -2,7 +2,7 @@ use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 
 #[derive(Debug)]
-pub struct ApiError(anyhow::Error);
+pub struct ApiError(pub anyhow::Error);
 
 // impl From<sqlx::Error> for ApiError {
 //     fn from(value: sqlx::Error) -> Self {

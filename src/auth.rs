@@ -1,15 +1,6 @@
-//! Example OAuth (Google) //! Example OAuth (Discord) implementation.
-//!
-//! 1) Create a new application at <https://discord.com/developers/applications>
-//! 2) Visit the OAuth2 tab to get your CLIENT_ID and CLIENT_SECRET
-//! 3) Add a new redirect URI (for this example: `http://127.0.0.1:3000/auth/authorized`)
-//! 4) Run with the following (replacing values appropriately):
-//! ```not_rust
-//! CLIENT_ID=REPLACE_ME CLIENT_SECRET=REPLACE_ME cargo run -p example-oauth
-//! ```
+use anyhow::{Context, Result};
+use async_session::{Session, SessionStore};
 
-use anyhow::Context;
-use async_session::{MemoryStore, Session, SessionStore};
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts, Query, State},
@@ -26,7 +17,7 @@ use oauth2::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    database::Database,
+    database::{DataLayer, Database},
     error::ApiResult,
     models::users::{User, UserDataLayer},
     state::{AppState, Env},
@@ -78,8 +69,8 @@ pub async fn protected(user: User) -> impl IntoResponse {
     )
 }
 
-pub async fn logout(
-    State(store): State<MemoryStore>,
+pub async fn logout<T: for<'a> DataLayer<'a>>(
+    State(store): State<DBSessionStore<T>>,
     TypedHeader(cookies): TypedHeader<headers::Cookie>,
 ) -> ApiResult<impl IntoResponse> {
     let cookie = cookies
@@ -171,14 +162,14 @@ impl IntoResponse for AuthRedirect {
 #[async_trait]
 impl<S> FromRequestParts<S> for User
 where
-    MemoryStore: FromRef<S>,
+    DBSessionStore<Database>: FromRef<S>,
     S: Send + Sync,
 {
     // If anything goes wrong or no session is found, redirect to the auth page
     type Rejection = AuthRedirect;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let store = MemoryStore::from_ref(state);
+        let store = DBSessionStore::from_ref(state);
 
         let cookies = parts
             .extract::<TypedHeader<headers::Cookie>>()
@@ -201,5 +192,49 @@ where
         let user = session.get::<User>("user").ok_or(AuthRedirect)?;
 
         Ok(user)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DBSessionStore<T: for<'a> DataLayer<'a>> {
+    pub db: T,
+}
+
+#[async_trait]
+impl<T: for<'a> DataLayer<'a>> SessionStore for DBSessionStore<T> {
+    async fn load_session(
+        &self,
+        cookie_value: String,
+    ) -> Result<Option<Session>, async_session::Error> {
+        let id = Session::id_from_cookie_value(&cookie_value)?;
+        let Some(session_str) = self.db.get_session(&id).await? else {
+            return Ok(None);
+        };
+        serde_json::from_str(&session_str).context("")
+    }
+
+    async fn store_session(&self, session: Session) -> Result<Option<String>> {
+        let id = session.id();
+        let serialized_session = serde_json::to_string(&session)?;
+
+        self.db
+            .insert_session(
+                id,
+                &serialized_session,
+                session.expiry().map(|t| t.to_string()),
+            )
+            .await?;
+
+        Ok(session.into_cookie_value())
+    }
+
+    async fn destroy_session(&self, session: Session) -> Result<()> {
+        let id = session.id();
+        self.db.delete_session(id).await?;
+        Ok(())
+    }
+
+    async fn clear_store(&self) -> Result<()> {
+        self.db.delete_all_sessions().await
     }
 }
