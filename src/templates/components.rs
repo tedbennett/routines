@@ -26,9 +26,11 @@ pub fn create_routine_form() -> Markup {
                 "Create Routine"
             }
             div .form-body {
-                input .color-input type="color" name="color";
-                input .title-input type="text" name="title";
-                button type="submit" {
+                .form-row {
+                    input .title-input type="text" placeholder="Routine name" name="title" required;
+                    input .color-input type="color" name="color";
+                }
+                button .create-button type="submit" {
                     "Create"
                 }
             }
@@ -68,6 +70,9 @@ pub fn header(page_title: &str) -> Markup {
         meta charset="utf-8" {}
         meta name="viewport" content="width=device-width, initial-scale=1.0" {}
         link rel="stylesheet" href="/static/index.css" {}
+        link rel="preconnect" href="https://fonts.googleapis.com" {}
+        link rel="preconnect" href="https://fonts.gstatic.com" crossorigin {}
+        link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap" rel="stylesheet" {}
         script src="static/js/htmx@1.9.5.js" {}
         title { (page_title) }
     }
