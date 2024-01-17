@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::{database::Database, error::ApiResult};
 
-#[derive(sqlx::Type)]
+#[derive(sqlx::Type, PartialEq)]
 pub enum InviteStatus {
     Sent,
     Accepted,

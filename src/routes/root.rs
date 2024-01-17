@@ -9,9 +9,9 @@ use uuid::Uuid;
 
 use crate::{
     database::DataLayer,
-    models::{entries::RoutineEntry, users::User},
+    models::{entries::RoutineEntry, invites::InviteStatus, users::User},
     state::AppState,
-    templates::home::index,
+    templates::{home::index, login::LoginInvite},
 };
 use crate::{models::routines::RoutineWithEntries, templates::login::login};
 
@@ -22,13 +22,41 @@ pub struct QueryParams {
     invite: Option<String>,
 }
 
+async fn parse_invite<T: for<'a> DataLayer<'a>>(
+    invite: Option<String>,
+    state: AppState<T>,
+) -> LoginInvite {
+    let Some(invite) = invite else {
+        return LoginInvite::None;
+    };
+
+    let Ok(uuid) = Uuid::parse_str(&invite) else {
+        return LoginInvite::None;
+    };
+
+    state
+        .db
+        .get_invite(&uuid)
+        .await
+        .ok()
+        .flatten()
+        .map_or(LoginInvite::None, |invite| {
+            if invite.status == InviteStatus::Sent {
+                LoginInvite::Invite(invite.id.to_string())
+            } else {
+                LoginInvite::InvalidInvite
+            }
+        })
+}
+
 pub async fn root<T: for<'a> DataLayer<'a>>(
     user: Option<User>,
     State(state): State<AppState<T>>,
     Query(query): Query<QueryParams>,
 ) -> Html<String> {
     let Some(user) = user else {
-        return Html(login(query.invite).into_string());
+        let invite = parse_invite(query.invite, state).await;
+        return Html(login(invite).into_string());
     };
     let routines = state.db.get_routines(&user.id).await.unwrap();
     let ids = routines.iter().map(|r| r.id).collect();

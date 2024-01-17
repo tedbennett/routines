@@ -9,6 +9,12 @@ body {
 	background: var(--bg-color);
 	color: white;
 }
+
+button {
+	all: unset;
+	cursor: pointer;
+}
+
 .nav-contents {
 	display: flex;
 	flex-direction: row;
@@ -24,12 +30,18 @@ body {
 	left: 0;
 	width: 100vw;
 	border: 1px solid var(--border-color);
+	background-color: var(--bg-color);
+	z-index: 10;
 }
 
 .nav-title {
 	font-weight: 600;
 	font-size: 1.125rem; 
 	line-height: 1.75rem; 
+}
+
+.invite {
+	padding-right: 1rem;
 }
 
 a {
@@ -91,8 +103,6 @@ a {
 }
 
 .create-button {
-	all: unset;
-	cursor: pointer;
 }
 
 .entry-container {

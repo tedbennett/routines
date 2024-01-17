@@ -1,5 +1,5 @@
 use crate::models::routines::Routine;
-use maud::{html, Markup, DOCTYPE};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 use time::Date;
 
 pub fn navbar(signed_in: bool) -> Markup {
@@ -10,8 +10,26 @@ pub fn navbar(signed_in: bool) -> Markup {
                     "Your Routines"
                 }
                 @if signed_in {
-                    a href="/logout" {
-                        "Logout"
+                    div {
+                        script {
+                            // Evil
+                            (PreEscaped(r#"window.copyUrl = function copyUrl() {
+                                fetch("/invite", {method: "POST"})
+                                    .then(res => res.text())
+                                    .then(url => {
+                                        navigator.clipboard.writeText(url);
+                                        document.getElementById("invite").textContent = "Copied to clipboard!";
+                                        setTimeout(() => { document.getElementById("invite").textContent = "Invite"}, 2500);
+                                    })
+                            };
+                            "#))
+                        }
+                        button onclick="copyUrl()" id="invite" .invite {
+                            "Invite"
+                        }
+                        a href="/logout" {
+                            "Logout"
+                        }
                     }
                 }
             }

@@ -1,6 +1,6 @@
 use crate::models::{
-    entries::RoutineEntryDataLayer, routines::RoutineDataLayer, sessions::SessionDataLayer,
-    users::UserDataLayer,
+    entries::RoutineEntryDataLayer, invites::InviteDataLayer, routines::RoutineDataLayer,
+    sessions::SessionDataLayer, users::UserDataLayer,
 };
 use anyhow::Result;
 use sqlx::{Pool, Sqlite, SqlitePool};
@@ -16,6 +16,7 @@ pub trait DataLayer<'a>:
     + RoutineDataLayer
     + SessionDataLayer
     + RoutineEntryDataLayer
+    + InviteDataLayer
     + 'a
 {
 }

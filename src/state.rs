@@ -62,6 +62,9 @@ pub struct Env {
     pub client_secret: String,
 
     #[clap(long, env)]
+    pub client_url: String,
+
+    #[clap(long, env)]
     pub redirect_url: String,
 
     #[clap(long, env)]

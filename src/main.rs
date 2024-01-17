@@ -10,7 +10,7 @@ use clap::Parser;
 use database::{setup_database, Database};
 use dotenvy::dotenv;
 use r#static::static_router;
-use routes::{create_routine, root, toggle_entry};
+use routes::{create_invite, create_routine, root, toggle_entry};
 use state::{AppState, Env};
 use std::env;
 use tower_http::trace::TraceLayer;
@@ -42,6 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/", get(root))
         .route("/routine", post(create_routine))
         .route("/entry", post(toggle_entry))
+        .route("/invite", post(create_invite))
         .route("/static/*path", get(static_router))
         .route("/auth/google", get(google_auth))
         .route("/auth/authorized", get(login_authorized))
